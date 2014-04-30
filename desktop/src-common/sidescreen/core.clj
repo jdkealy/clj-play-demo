@@ -13,15 +13,20 @@
     nil))
 
 (defscreen main-screen
+  :on-timer
+  (fn [screen entities]
+    (assoc (texture "clojure.png")
+           :x 350 :y 250 ))
   :on-show
   (fn [screen entities]
+    (add-timer! screen :spawn-enemy 1)
     (update! screen :renderer (stage) :camera (orthographic))
     (assoc (texture "clojure.png")
-           :x 150 :y 150 )
-    )
+           :x 150 :y 150 ))
   :on-resize
   (fn [screen entities]
     (height! screen 600))
+
   :on-render
   (fn [screen entities]
     (clear!)
