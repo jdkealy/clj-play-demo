@@ -1,7 +1,16 @@
 (ns sidescreen.core
   (:require [play-clj.core :refer :all]
             [play-clj.g2d :refer :all]
+            [clj-http.client :as client]
+            [clojure.core.async :as async :refer [chan close! >!! <!! thread alts!! go >! <!]]
+            [cheshire.core :refer :all]
+            [clj-http.client :as client]
             ))
+
+(def c (chan))
+
+(def uniq-id (atom 50))
+(defn get-next [] (swap! uniq-id inc))
 
 (defn move
   [entity direction]
@@ -12,21 +21,30 @@
     :left (assoc entity :x (dec (:x entity)))
     nil))
 
+(comment
+  (get-next)
+  (go (
+       (let [res (<! c)]
+         (println res))))
+  )
+
 (defscreen main-screen
-  :on-timer
-  (fn [screen entities]
-    (assoc (texture "clojure.png")
-           :x 350 :y 250 ))
   :on-show
   (fn [screen entities]
-    (add-timer! screen :spawn-enemy 1)
+    (go (>! c "SHOW"))
+    (add-timer! screen :spawn-enemy 1 1 29)
     (update! screen :renderer (stage) :camera (orthographic))
-    (assoc (texture "clojure.png")
-           :x 150 :y 150 ))
+    (texture "asset_two.jpg"
+             :flip true false
+             ))
   :on-resize
   (fn [screen entities]
     (height! screen 600))
 
+  :on-timer
+  (fn [screen entities]
+    (go (>! c "AVR"))
+    nil)
   :on-render
   (fn [screen entities]
     (clear!)
@@ -47,3 +65,8 @@
   :on-create
   (fn [this]
     (set-screen! this main-screen)))
+
+(comment
+  (on-gl (set-screen! sidescreen main-screen))
+  (-> main-screen :entities deref)
+  )
